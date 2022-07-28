@@ -1,0 +1,64 @@
+---
+- name: Create directories
+  file:
+    state: directory
+    path: "{{ item }}"
+    mode: 0755
+  with_items:
+    - /opt/docker-compose-service/gtm
+
+- name: Put docker-compose.yml
+  template:
+    src: docker-compose.yml.j2
+    dest: /opt/docker-compose-service/gtm/docker-compose.yml
+  notify: Restart gtm
+
+- name: Start gtm
+  systemd:
+    name: docker-compose-service@gtm
+    enabled: yes
+    state: started
+
+- name: Delete caddy conf
+  uri:
+    url: http://localhost:2019/id/{{ gtm_host }}/
+    method: DELETE
+    headers:
+      Content-Type: application/json
+      Origin: http://localhost:2019
+    status_code:
+      - 200
+      - 404
+
+- name: Update caddy
+  uri:
+    url: http://localhost:2019/config/apps/http/servers/{{ caddy_servername }}/routes/
+    method: POST
+    headers:
+      Content-Type: application/json
+      Origin: http://localhost:2019
+    return_content: yes
+    status_code: 200
+    body_format: json
+    body: |
+      {
+        "@id": "{{ gtm_host }}",
+        "match": [
+          {
+            "host": [
+              "{{ gtm_host }}"
+            ]
+          }
+        ],
+        "handle": [
+          {
+            "handler": "reverse_proxy",
+            "upstreams": [
+              {
+                "dial": "gtm:8080"
+              }
+            ]
+          }
+        ],
+        "terminal": true
+      }

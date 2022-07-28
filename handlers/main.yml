@@ -1,0 +1,7 @@
+---
+- name: Restart gtm
+  systemd:
+    name: docker-compose-service@gtm
+    enabled: yes
+    state: restarted
+    daemon_reload: yes

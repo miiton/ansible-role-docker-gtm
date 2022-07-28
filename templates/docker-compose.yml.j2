@@ -1,0 +1,30 @@
+---
+version: "3.8"
+
+services:
+  gtm:
+    image: gcr.io/cloud-tagging-10302018/gtm-cloud-image:{{ gtm_version }}
+    container_name: gtm
+    restart: unless-stopped
+    environment:
+      CONTAINER_CONFIG: {{ lookup('env', 'CONTAINER_CONFIG') }}
+{% if loki_host == "" %}
+    logging:
+      options:
+        max-size: "10k"
+        max-file: "5"
+{% else %}
+    logging:
+      driver: loki
+      options:
+        loki-url: https://{{ loki_host }}/loki/api/v1/push
+        loki-tenant-id: {{ loki_tenant_id }}
+        max-size: "10k"
+        max-file: "5"
+{% endif %}
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true

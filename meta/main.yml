@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  author: miiton
+  description: gtm
+  company: "miiton"
+  license: "MIT"
+  min_ansible_version: "2.9"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - "focal"
+        - "jammy"
+  galaxy_tags:
+    - analytics
+
+dependencies:
+  - name: docker
+    src: git+git@github.com:miiton/ansible-role-docker-caddy.git
+    version: main
